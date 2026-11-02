@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Crie sua própria IA do zero</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+:root{--ink:#101828;--paper:#F4F6FB;--card:#fff;--line:#D9DFEC;--muted:#4B5568;--blue:#2F4BFF;--on-blue:#fff;--mint:#0E9F6E;--amber:#FFB020;--hero:#0D1430;--hero2:#141E4A;--hero-ink:#F4F6FB;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ink:#EEF1F8;--paper:#0A0F1F;--card:#121A33;--line:#26304D;--muted:#A3AEC6;--blue:#6F85FF;--on-blue:#0A0F1F;--mint:#3DD598;--hero:#060A18;--hero2:#0E1638;color-scheme:dark}}
+:root[data-theme="dark"]{--ink:#EEF1F8;--paper:#0A0F1F;--card:#121A33;--line:#26304D;--muted:#A3AEC6;--blue:#6F85FF;--on-blue:#0A0F1F;--mint:#3DD598;--hero:#060A18;--hero2:#0E1638;color-scheme:dark}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth;scroll-padding-top:calc(env(safe-area-inset-top,0px) + 64px)}
+body{background:var(--paper);color:var(--ink);font:400 17px/1.6 "Instrument Sans",system-ui,sans-serif;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--hero);z-index:60}
+h1,h2,h3{font-family:"Bricolage Grotesque",system-ui,sans-serif;line-height:1.1;letter-spacing:-.02em}
+h2{font-size:clamp(28px,5vw,44px);margin-bottom:14px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+section{padding:84px 0}
+.lead{color:var(--muted);max-width:60ch}
+#bar{position:fixed;top:env(safe-area-inset-top,0px);left:0;height:3px;width:100%;transform-origin:0 50%;transform:scaleX(0);background:linear-gradient(90deg,var(--blue),var(--amber));z-index:70}
+nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;background:color-mix(in srgb,var(--hero) 88%,transparent);backdrop-filter:blur(12px);color:#fff}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:60px}
+.logo{font:800 20px "Bricolage Grotesque",sans-serif;color:#fff;text-decoration:none}
+.logo i{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--amber);margin-right:8px;animation:pulse 2s infinite}
+nav a.go{color:#fff;text-decoration:none;font-weight:600;font-size:15px;border:1px solid #56628A;padding:8px 16px;border-radius:999px;transition:background .25s}
+nav a.go:hover{background:#2F4BFF;border-color:#2F4BFF}
+.btn{position:relative;overflow:hidden;display:inline-block;padding:15px 26px;border-radius:10px;font-weight:600;text-decoration:none;background:var(--blue);color:var(--on-blue);border:2px solid var(--blue);transition:transform .2s,box-shadow .2s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(47,75,255,.35)}
+.btn::after{content:"";position:absolute;top:0;left:-70%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.45),transparent);transform:skewX(-20deg);transition:left .6s}
+.btn:hover::after{left:130%}
+.btn.alt{background:transparent;color:var(--ink);border-color:var(--ink)}
+.btn.glow{animation:glow 2.4s infinite}
+.btn:focus-visible,summary:focus-visible,nav a:focus-visible{outline:3px solid var(--amber);outline-offset:3px}
+.hero{position:relative;overflow:hidden;background:radial-gradient(120% 90% at 80% 0%,var(--hero2),var(--hero));color:#F4F6FB;padding:72px 0 88px}
+.orb{position:absolute;border-radius:50%;filter:blur(70px);opacity:.5;animation:float 9s ease-in-out infinite;pointer-events:none}
+.o1{width:320px;height:320px;background:#2F4BFF;top:-80px;right:-60px}
+.o2{width:240px;height:240px;background:#FFB020;opacity:.18;bottom:-60px;left:-40px;animation-delay:-4s}
+.hero .grid{position:relative;display:grid;grid-template-columns:1.1fr .9fr;gap:44px;align-items:center}
+.pill{display:inline-block;border:1px solid #3A4676;border-radius:999px;padding:6px 14px;font-size:14px;color:#D5DCF2;margin-bottom:20px;background:rgba(255,255,255,.05)}
+.pill b{color:var(--amber)}
+.hero h1{font-size:clamp(36px,6.4vw,64px);font-weight:800}
+.hero h1 span{display:inline-block;opacity:0;transform:translateY(30px) rotate(2deg);animation:word .7s cubic-bezier(.2,.8,.2,1) forwards}
+.hero p{color:#B8C2DA;margin:18px 0 28px;max-width:48ch}
+.hero .btn.alt{color:#fff;border-color:#56628A;margin-left:8px}
+.chat{background:#0B1226;border:1px solid #2A3560;border-radius:14px;padding:18px;font-size:15px;min-height:300px;color:#EEF1F8;box-shadow:0 30px 60px rgba(0,0,0,.4);animation:float 7s ease-in-out infinite}
+.chat .bar{display:flex;gap:6px;margin-bottom:14px}.chat .bar i{width:10px;height:10px;border-radius:50%;background:#2A3560}
+.msg{padding:10px 14px;border-radius:12px;margin-bottom:10px;max-width:92%;opacity:0}.msg.show{opacity:1}
+.u{background:#2F4BFF;margin-left:auto;color:#fff}.a{background:#18224A}
+.cur::after{content:"▍";animation:blink 1s steps(2) infinite}
+.strip{background:var(--ink);color:var(--paper);overflow:hidden;padding:14px 0;white-space:nowrap}
+.strip div{display:inline-flex;gap:44px;animation:marq 26s linear infinite;padding-right:44px}
+.strip span{font-weight:600;font-size:15px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;text-align:center}
+.stats b{display:block;font:800 clamp(44px,7vw,72px)/1 "Bricolage Grotesque",sans-serif;color:var(--blue)}
+.stats span{color:var(--muted)}
+.cols{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:30px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:24px;transition:transform .2s ease-out,box-shadow .3s,border-color .3s;transform-style:preserve-3d}
+.box:hover{box-shadow:0 18px 40px rgba(16,24,40,.14);border-color:var(--blue)}
+.box h3{font-size:20px;margin-bottom:8px}.box p{color:var(--muted);font-size:15.5px}
+.ico{width:46px;height:46px;border-radius:12px;background:color-mix(in srgb,var(--blue) 14%,transparent);display:grid;place-items:center;margin-bottom:14px;font-size:22px;transition:transform .4s}
+.box:hover .ico{transform:rotate(-8deg) scale(1.12)}
+.alt-bg{background:var(--card)}
+.mods{list-style:none;padding:0 0 0 34px;margin-top:34px;position:relative;--p:0}
+.mods::before,.mods::after{content:"";position:absolute;left:9px;top:6px;width:3px;border-radius:2px}
+.mods::before{bottom:6px;background:var(--line)}
+.mods::after{height:calc((100% - 12px)*var(--p));background:var(--blue)}
+.mods li{position:relative;padding:0 0 34px}
+.mods li::before{content:"";position:absolute;left:-34px;top:4px;width:21px;height:21px;border-radius:50%;background:var(--paper);border:3px solid var(--line);transition:.4s;z-index:1}
+.mods li.in::before{border-color:var(--blue);background:var(--blue);box-shadow:0 0 0 6px color-mix(in srgb,var(--blue) 20%,transparent)}
+.mods h3{font-size:22px;margin-bottom:4px}.mods p{color:var(--muted);font-size:15.5px;max-width:58ch}
+.mods small{color:var(--blue);font-weight:600}
+.ok{list-style:none;padding:0;margin-top:22px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ok li{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px 14px 48px;position:relative}
+.ok li::before{content:"✓";position:absolute;left:14px;top:50%;margin-top:-14px;width:28px;height:28px;border-radius:50%;background:var(--mint);color:#fff;display:grid;place-items:center;font-weight:700;transform:scale(0);transition:transform .5s cubic-bezier(.3,1.6,.5,1) .3s}
+.ok li.in::before{transform:scale(1)}
+.offer{background:radial-gradient(100% 80% at 50% 0%,var(--hero2),var(--hero));color:#F4F6FB;overflow:hidden;position:relative}
+.offer h2,.offer .lead{text-align:center}.offer .lead{margin:auto;color:#B8C2DA}
+.ocard{position:relative;max-width:640px;margin:34px auto 0;border-radius:20px;padding:2px;background:linear-gradient(120deg,#2F4BFF,#FFB020,#2F4BFF);background-size:300% 100%;animation:slide 6s linear infinite}
+.ocard>div{background:#0E1638;border-radius:18px;padding:38px 26px;text-align:center}
+.from{color:#B8C2DA;font-size:17px}
+.price{font:800 clamp(56px,10vw,84px) "Bricolage Grotesque",sans-serif;color:var(--amber);line-height:1.1;margin:4px 0}
+.pay{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:24px}
+.pay .btn{text-align:center}.pay .btn.alt{color:#fff;border-color:#56628A}
+.small{font-size:13.5px;color:#A3AEC6;margin-top:16px}
+.guar{display:grid;grid-template-columns:120px 1fr;gap:28px;align-items:center}
+.guar svg{width:110px;height:110px}
+.guar path{fill:none;stroke:var(--mint);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:240;stroke-dashoffset:240;transition:stroke-dashoffset 1.6s ease .2s}
+.guar.in path{stroke-dashoffset:0}
+details{border-bottom:1px solid var(--line);padding:18px 0}
+summary{cursor:pointer;font-weight:600;font-size:18px;list-style:none;display:flex;justify-content:space-between;gap:12px}
+summary::after{content:"+";font-size:26px;line-height:1;color:var(--blue);transition:transform .3s}
+details[open] summary::after{transform:rotate(45deg)}
+details p{color:var(--muted);margin-top:10px;animation:drop .35s ease}
+footer{padding:34px 0 40px;color:var(--muted);font-size:14px;text-align:center}
+.sticky{display:none}
+.js [data-r]{opacity:0;transform:translateY(28px);transition:opacity .8s ease,transform .8s cubic-bezier(.2,.8,.2,1);transition-delay:var(--d,0s)}
+.js [data-r=l]{transform:translateX(-36px)}.js [data-r=z]{transform:scale(.92)}
+.js [data-r].in{opacity:1;transform:none}
+@keyframes word{to{opacity:1;transform:none}}
+@keyframes float{50%{transform:translateY(-14px)}}
+@keyframes blink{50%{opacity:0}}
+@keyframes pulse{50%{transform:scale(1.5);opacity:.5}}
+@keyframes marq{to{transform:translateX(-50%)}}
+@keyframes slide{to{background-position:300% 0}}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(47,75,255,.55)}70%{box-shadow:0 0 0 16px rgba(47,75,255,0)}}
+@keyframes drop{from{opacity:0;transform:translateY(-6px)}}
+@media(max-width:760px){
+.hero .grid,.cols,.pay,.ok,.stats,.guar{grid-template-columns:1fr}.hero .btn.alt{margin:10px 0 0}section{padding:58px 0}
+.sticky{display:block;position:fixed;left:0;right:0;bottom:0;z-index:55;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:var(--hero);transform:translateY(110%);transition:transform .4s}
+.sticky.on{transform:none}.sticky .btn{display:block;text-align:center}
+.guar svg{margin:auto}}
+@media(prefers-reduced-motion:reduce){*,::before,::after{animation:none!important;transition:none!important}.js [data-r]{opacity:1;transform:none}.hero h1 span{opacity:1;transform:none}.msg{opacity:1}.strip{overflow-x:auto}.guar path{stroke-dashoffset:0}.ok li::before{transform:scale(1)}}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<nav><div class="wrap"><a class="logo" href="#topo"><i></i>IA do Zero</a><a class="go" href="#oferta">Quero começar</a></div></nav>
+
+<header class="hero" id="topo"><div class="orb o1"></div><div class="orb o2"></div><div class="wrap grid">
+<div>
+<span class="pill">Produtos a partir de <b>R$ 19,90</b></span>
+<h1 id="h1">Crie sua própria IA do zero, mesmo sem saber programar</h1>
+<p>Um passo a passo completo para montar um assistente de IA que atende clientes, responde dúvidas e trabalha por você, usando ferramentas que você já pode acessar hoje.</p>
+<a class="btn glow" href="#oferta">Quero criar minha IA</a><a class="btn alt" href="#conteudo">Ver o conteúdo</a>
+</div>
+<div class="chat" aria-label="Exemplo de conversa com uma IA criada no curso">
+<div class="bar"><i></i><i></i><i></i></div>
+<div class="msg u">Você é a atendente da minha loja. Responda com simpatia e envie o link de pagamento.</div>
+<div class="msg a">Pronto! Sou a Lia, atendente da sua loja. Já sei seus preços, prazos e como enviar o link de pagamento. Vamos testar?</div>
+<div class="msg u">Quanto custa a entrega para Goiânia?</div>
+<div class="msg a">Para Goiânia a entrega sai em até 2 dias úteis. Posso enviar o link para você finalizar agora?</div>
+</div>
+</div></header>
+
+<div class="strip" aria-hidden="true"><div><span>Kiwify</span><span>Cakto</span><span>Pix</span><span>Cartão de crédito</span><span>Boleto</span><span>Acesso imediato</span><span>Garantia de 7 dias</span><span>Sem mensalidade</span><span>Kiwify</span><span>Cakto</span><span>Pix</span><span>Cartão de crédito</span><span>Boleto</span><span>Acesso imediato</span><span>Garantia de 7 dias</span><span>Sem mensalidade</span></div></div>
+
+<section><div class="wrap stats">
+<div data-r="z"><b data-to="6">0</b><span>módulos práticos</span></div>
+<div data-r="z" style="--d:.12s"><b data-to="100" data-s="%">0</b><span>sem precisar programar</span></div>
+<div data-r="z" style="--d:.24s"><b data-to="7">0</b><span>dias de garantia</span></div>
+</div></section>
+
+<section class="alt-bg"><div class="wrap">
+<h2 data-r>Para quem é este material</h2>
+<p class="lead" data-r style="--d:.1s">Se você sabe usar WhatsApp e um navegador, consegue acompanhar. Nenhuma experiência técnica é necessária.</p>
+<div class="cols">
+<div class="box tilt" data-r style="--d:.05s"><div class="ico">💰</div><h3>Quem quer vender mais</h3><p>Monte uma IA que atende clientes e responde dúvidas enquanto você cuida do resto.</p></div>
+<div class="box tilt" data-r style="--d:.18s"><div class="ico">⏱️</div><h3>Quem quer economizar tempo</h3><p>Automatize tarefas repetidas: textos, respostas, pesquisas e organização.</p></div>
+<div class="box tilt" data-r style="--d:.31s"><div class="ico">🚀</div><h3>Quem quer aprender do zero</h3><p>Entenda como uma IA funciona e saia com algo real, funcionando, no fim do curso.</p></div>
+</div></div></section>
+
+<section id="conteudo"><div class="wrap">
+<h2 data-r>O que você vai aprender, em ordem</h2>
+<p class="lead" data-r style="--d:.1s">Cada módulo termina com uma entrega prática. No final, sua IA está pronta e testada.</p>
+<ol class="mods" id="mods">
+<li data-r="l"><small>Módulo 1</small><h3>Como uma IA funciona</h3><p>O essencial, sem jargão: o que ela faz, onde erra e como guiá-la.</p></li>
+<li data-r="l"><small>Módulo 2</small><h3>Escolha das ferramentas</h3><p>Quais plataformas usar, quanto custam e como criar as contas.</p></li>
+<li data-r="l"><small>Módulo 3</small><h3>Instruções que funcionam</h3><p>Como escrever as regras da sua IA: personalidade, limites e tom de voz.</p></li>
+<li data-r="l"><small>Módulo 4</small><h3>Dando conhecimento à sua IA</h3><p>Ensine produtos, preços e perguntas frequentes para ela responder com precisão.</p></li>
+<li data-r="l"><small>Módulo 5</small><h3>Testes e correções</h3><p>Checklist para encontrar falhas antes de colocar a IA para atender de verdade.</p></li>
+<li data-r="l"><small>Módulo 6</small><h3>Colocando no ar</h3><p>Publique em site ou WhatsApp e acompanhe os resultados.</p></li>
+</ol></div></section>
+
+<section class="alt-bg"><div class="wrap">
+<h2 data-r>O que você recebe</h2>
+<ul class="ok">
+<li data-r>Curso completo em vídeo e texto, com acesso imediato</li>
+<li data-r style="--d:.1s">Modelos de instruções prontos para copiar e adaptar</li>
+<li data-r style="--d:.2s">Checklist de testes antes de publicar sua IA</li>
+<li data-r style="--d:.3s">Planilha de perguntas frequentes para treinar seu assistente</li>
+<li data-r style="--d:.4s">Atualizações do material sem custo adicional</li>
+<li data-r style="--d:.5s">Suporte pela plataforma em que você comprar</li>
+</ul></div></section>
+
+<section class="offer" id="oferta"><div class="wrap">
+<h2 data-r>Comece hoje e tenha sua IA funcionando</h2>
+<p class="lead" data-r style="--d:.1s">Pagamento único, sem mensalidade. Escolha a plataforma em que prefere pagar.</p>
+<div class="ocard" data-r="z"><div>
+<div class="from">Produtos a partir de</div>
+<div class="price">R$ 19,90</div>
+<div class="from">à vista ou parcelado no cartão</div>
+<div class="pay">
+<!-- Troque pelos seus links de checkout -->
+<a class="btn glow" href="https://pay.kiwify.com.br/SEU-LINK" rel="noopener">Comprar pela Kiwify</a>
+<a class="btn alt" href="https://pay.cakto.com.br/SEU-LINK" rel="noopener">Comprar pela Cakto</a>
+</div>
+<p class="small">Pix, cartão e boleto. Acesso liberado logo após a confirmação do pagamento.</p>
+</div></div></div></section>
+
+<section><div class="wrap guar" data-r>
+<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 8 L86 22 V48 C86 70 70 86 50 93 C30 86 14 70 14 48 V22 Z"/><path d="M33 50 L45 62 L68 38"/></svg>
+<div><h2>Garantia de 7 dias</h2><p class="lead">Se em até 7 dias você achar que o material não é para você, peça o reembolso direto na plataforma em que comprou. Sem perguntas.</p></div>
+</div></section>
+
+<section class="alt-bg"><div class="wrap">
+<h2 data-r>Perguntas frequentes</h2>
+<details data-r><summary>Preciso saber programar?</summary><p>Não. Todo o passo a passo usa ferramentas que funcionam sem código.</p></details>
+<details data-r><summary>Quanto tempo leva para ter minha IA pronta?</summary><p>Quem segue os módulos em ordem monta a primeira versão em poucas horas.</p></details>
+<details data-r><summary>Como recebo o acesso?</summary><p>Logo após a confirmação do pagamento, você recebe o acesso por e-mail na Kiwify ou na Cakto, conforme a plataforma escolhida.</p></details>
+<details data-r><summary>Há mensalidade?</summary><p>Não. O pagamento é único. Algumas ferramentas de IA têm planos próprios, e o curso mostra opções gratuitas para começar.</p></details>
+<details data-r><summary>Posso pedir reembolso?</summary><p>Sim, em até 7 dias após a compra, pela própria plataforma.</p></details>
+</div></section>
+
+<footer><div class="wrap">Pagamento processado com segurança pela Kiwify e pela Cakto.</div></footer>
+<div class="sticky" id="stk"><a class="btn glow" href="#oferta">Produtos a partir de R$ 19,90</a></div>
+
+<script>
+(function(){
+var de=document.documentElement,RM=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+de.classList.add("js");
+/* headline por palavras */
+var h=document.getElementById("h1");
+if(!RM){var w=h.textContent.split(" ");h.textContent="";w.forEach(function(t,i){var s=document.createElement("span");s.textContent=t;s.style.animationDelay=(.15+i*.07)+"s";h.appendChild(s);h.appendChild(document.createTextNode(" "))})}
+/* revelar ao rolar */
+function count(el){var to=+el.dataset.to,s=el.dataset.s||"",t0=null;if(RM){el.textContent=to+s;return}
+ (function f(t){if(!t0)t0=t;var p=Math.min((t-t0)/1400,1);el.textContent=Math.round(to*(1-Math.pow(1-p,3)))+s;if(p<1)requestAnimationFrame(f)})(performance.now())}
+var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add("in");var c=e.target.querySelector("[data-to]");if(c)count(c);io.unobserve(e.target)}})},{threshold:.2});
+document.querySelectorAll("[data-r],.mods li,.ok li").forEach(function(n){io.observe(n)});
+/* progresso, linha do tempo e barra fixa */
+var bar=document.getElementById("bar"),mods=document.getElementById("mods"),stk=document.getElementById("stk"),off=document.getElementById("oferta"),tk=false;
+function upd(){tk=false;var y=window.scrollY,m=document.documentElement.scrollHeight-innerHeight;bar.style.transform="scaleX("+(m>0?y/m:0)+")";
+ var r=mods.getBoundingClientRect(),p=(innerHeight*.6-r.top)/r.height;mods.style.setProperty("--p",Math.max(0,Math.min(1,p)));
+ var o=off.getBoundingClientRect(),inOff=o.top<innerHeight&&o.bottom>0;stk.classList.toggle("on",y>600&&!inOff)}
+addEventListener("scroll",function(){if(!tk){tk=true;requestAnimationFrame(upd)}},{passive:true});upd();
+/* inclinação dos cartões */
+if(!RM&&matchMedia("(hover:hover)").matches)document.querySelectorAll(".tilt").forEach(function(b){
+ b.addEventListener("pointermove",function(e){var r=b.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;b.style.transform="perspective(700px) rotateY("+x*10+"deg) rotateX("+(-y*10)+"deg) translateY(-4px)"});
+ b.addEventListener("pointerleave",function(){b.style.transform=""})});
+/* conversa digitada */
+var ms=[].slice.call(document.querySelectorAll(".msg")),tx=ms.map(function(e){return e.textContent});
+if(RM)return;
+ms.forEach(function(e){e.textContent=""});var n=0;
+function next(){if(n>=ms.length)return;var e=ms[n],t=tx[n],i=0;n++;e.classList.add("show","cur");
+ (function tick(){e.textContent=t.slice(0,++i);if(i<t.length)setTimeout(tick,16);else{e.classList.remove("cur");setTimeout(next,450)}})()}
+setTimeout(next,900);
+})();
+</script>
+</body>
+</html>
